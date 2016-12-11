@@ -22,11 +22,10 @@ public:
     : it_(nh_)
   {
     // Subscrive to input video feed and publish output video feed
-    image_sub_ = it_.subscribe("/camera/depth/image_raw", 1, 
-    &ImageSkeleton::skeletonCallback, this);
+    image_sub_ = it_.subscribe("/camera/depth/image_raw", 1, &ImageSkeleton::skeletonCallback, this);
     image_pub_ = it_.advertise("/image_skeleton", 1);
-   
-  // skeleton_slope_pub_ = it_.advertise("/slope", 1);
+    skeleton_slope_pub_ = nh_.advertise<std_msgs::Float64>("/slope", 1);
+
 
     cv::namedWindow(OPENCV_WINDOW);
   }
@@ -88,6 +87,7 @@ public:
     cv::Mat skel_line_t;
 
     skel.convertTo(skel_line, CV_8UC1,255.0);
+ //   cv::Mat cropped_skel = skel_line(cv::Rect(50,50,200,200));    
     //cv::medianBlur(skel_line,skel_line_,5);
     //cv::dilate(skel_line, skel_line_, dilateelement);
     //cv::erode(skel_line_, skel_line_t, erodeelement);
@@ -164,9 +164,12 @@ public:
     std_msgs::Float64 slope;
     slope.data = -lines[1]/lines[0];
     
+
+    skeleton_slope_pub_.publish(slope);
+
+    
     // Output modified video stream
     image_pub_.publish(cv_ptr->toImageMsg());
-    //skeleton_slope_pub_.publish(slope);
   }
 };
 
